@@ -1,7 +1,42 @@
 const router = require("express").Router();
 const { Post } = require("../../models");
+const withAuth = require("../../utils/auth");
+const sequelize = require("../../config/connection");
 
-router.post('/', async (req, res) => {
+router.get('/', (req, res) => {
+  Post.findAll({
+    where: {
+      user_id: req.session.userId
+      },
+    attributes: [
+      'id',
+      'title',
+      'body',
+      'created_at'
+      ],
+    include: [
+      {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+        include: {
+          model: User,
+          attributes: ['username']
+        }
+        },
+        {
+          model: User,
+          attributes: ['username']
+        },
+      ]
+    })
+    .then(dbPostData => res.json(dbPostData))
+    .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+      });
+  });
+
+router.post('/', withAuth, async (req, res) => {
     try {
       const dbPostData = await Post.create({
         title: req.body.title,
@@ -9,18 +44,18 @@ router.post('/', async (req, res) => {
         userId: req.session.userId //req.body.userId
       });
   
-      // req.session.save(() => {
-      //   req.session.loggedIn = true;
+      req.session.save(() => {
+        req.session.loggedIn = true;
   
         res.status(200).json(dbPostData);
-      // });
+       });
     } catch (err) {
       console.log(err);
       res.status(500).json(err);
     }
   });
 
-  router.delete('/:id', async (req, res) => {
+router.delete('/:id', withAuth, async (req, res) => {
     try {
       const delPostData = await Post.destroy({
         where: {

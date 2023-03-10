@@ -1,29 +1,18 @@
 const router = require('express').Router();
 const { User } = require('../../models');
+//const withAuth = require('../../utils/auth');
 
-router.get('/', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const dbUserData = await User.findAll({
-      include: [
-        {
-          model: User,
-          attributes: ['username'],
-        },
-      ],
-    });
-
-    const users = dbUserData.map((username) =>
-      username.get({ plain: true })
-    );
-
-    res.render('homepage', {
-      users,
-    });
+    const dbUserData = await User.create(reg.body);
+      req.session.loggedIn = true;
+      req.session.user_id = dbUserData.id;
   } catch (err) {
     console.log(err);
     res.status(500).json(err);
   }
-});
+  });
+
 
 // CREATE new user
 router.post('/', async (req, res) => {
@@ -33,11 +22,11 @@ router.post('/', async (req, res) => {
       password: req.body.password,
     });
 
-    // req.session.save(() => {
-    //   req.session.loggedIn = true;
+    req.session.save(() => {
+      req.session.loggedIn = true;
 
       res.status(200).json(dbUserData);
-    // });
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json(err);
@@ -49,7 +38,7 @@ router.post('/login', async (req, res) => {
   try {
     const dbUserData = await User.findOne({
       where: {
-        email: req.body.username,
+        username: req.body.username,
       },
     });
 

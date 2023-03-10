@@ -18,7 +18,7 @@ const sess = {
   secret: 'bigduffydog',
   cookie: {
     // Session will automatically expire in 10 minutes
-    expires: 10 * 60 * 1000
+    expires: 60 * 60 * 1000
   },
   resave: true,
   rolling: true,
